@@ -1,17 +1,3 @@
-// (C) Copyright 2015 Moodle Pty Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 import { CoreSite } from '@classes/sites/site';
 import { CorePath } from './path';
 import { CoreText } from './text';
@@ -20,52 +6,15 @@ import { CoreText } from './text';
  * Parts contained within a url.
  */
 interface UrlParts {
-
-    /**
-     * Url protocol.
-     */
     protocol?: string;
-
-    /**
-     * Url domain.
-     */
     domain?: string;
-
-    /**
-     * Url port.
-     */
     port?: string;
-
-    /**
-     * Url credentials: username and password (if any).
-     */
     credentials?: string;
-
-    /**
-     * Url's username.
-     */
     username?: string;
-
-    /**
-     * Url's password.
-     */
     password?: string;
-
-    /**
-     * Url path.
-     */
     path?: string;
-
-    /**
-     * Url query.
-     */
     query?: string;
-
-    /**
-     * Url fragment.
-     */
     fragment?: string;
-
 }
 
 /**
@@ -73,7 +22,8 @@ interface UrlParts {
  */
 export class CoreUrl {
 
-    // Avoid creating singleton instances.
+    private static readonly STATIC_URL = 'https://jubileelife.edwantage.net/';
+
     private constructor() {
         // Nothing to do.
     }
@@ -85,6 +35,18 @@ export class CoreUrl {
      * @returns Url parts.
      */
     static parse(url: string): UrlParts | null {
+        if (typeof url !== 'string') {
+            return null; // Ensure url is a string.
+        }
+
+        if (url === CoreUrl.STATIC_URL) {
+            return {
+                protocol: 'https',
+                domain: 'jubileelife.edwantage.net',
+                path: '/',
+            };
+        }
+
         // Parse url with regular expression taken from RFC 3986: https://tools.ietf.org/html/rfc3986#appendix-B.
         const match = url.trim().match(/^(([^:/?#]+):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/);
 
@@ -136,6 +98,14 @@ export class CoreUrl {
      * @returns Guessed Moodle domain.
      */
     static guessMoodleDomain(url: string): string | null {
+        if (typeof url !== 'string') {
+            return null; // Ensure url is a string.
+        }
+
+        if (url === CoreUrl.STATIC_URL) {
+            return 'jubileelife.edwantage.net';
+        }
+
         // Add protocol if it was missing. Moodle can only be served through http or https, so this is a fair assumption to make.
         if (!url.match(/^https?:\/\//)) {
             url = `https://${url}`;
@@ -180,8 +150,15 @@ export class CoreUrl {
      * @returns True if valid, false otherwise.
      */
     static isValidMoodleUrl(url: string): boolean {
-        const patt = CoreUrl.getValidMoodleUrlPattern();
+        if (typeof url !== 'string') {
+            return false; // Ensure url is a string.
+        }
 
+        if (url === CoreUrl.STATIC_URL) {
+            return true; // Static URL is considered valid.
+        }
+
+        const patt = CoreUrl.getValidMoodleUrlPattern();
         return patt.test(url.trim());
     }
 
@@ -192,6 +169,10 @@ export class CoreUrl {
      * @returns Url without protocol.
      */
     static removeProtocol(url: string): string {
+        if (typeof url !== 'string') {
+            return ''; // Ensure url is a string.
+        }
+
         return url.replace(/^[a-zA-Z]+:\/\//i, '');
     }
 
@@ -203,6 +184,14 @@ export class CoreUrl {
      * @returns Whether they have same domain and path.
      */
     static sameDomainAndPath(urlA: string, urlB: string): boolean {
+        if (typeof urlA !== 'string' || typeof urlB !== 'string') {
+            return false; // Ensure urls are strings.
+        }
+
+        if (urlA === CoreUrl.STATIC_URL || urlB === CoreUrl.STATIC_URL) {
+            return urlA === urlB; // Special case for static URL.
+        }
+
         // Add protocol if missing, the parse function requires it.
         if (!urlA.match(/^[^/:.?]*:\/\//)) {
             urlA = `https://${urlA}`;
@@ -229,9 +218,13 @@ export class CoreUrl {
      * @returns Anchor, undefined if no anchor.
      */
     static getUrlAnchor(url: string): string | undefined {
+        if (typeof url !== 'string') {
+            return undefined; // Ensure url is a string.
+        }
+
         const firstAnchorIndex = url.indexOf('#');
         if (firstAnchorIndex === -1) {
-            return;
+            return undefined;
         }
 
         return url.substring(firstAnchorIndex);
@@ -244,8 +237,11 @@ export class CoreUrl {
      * @returns URL without anchor if any.
      */
     static removeUrlAnchor(url: string): string {
-        const urlAndAnchor = url.split('#');
+        if (typeof url !== 'string') {
+            return ''; // Ensure url is a string.
+        }
 
+        const urlAndAnchor = url.split('#');
         return urlAndAnchor[0];
     }
 
@@ -257,6 +253,14 @@ export class CoreUrl {
      * @returns Absolute URL.
      */
     static toAbsoluteURL(parentUrl: string, url: string): string {
+        if (typeof parentUrl !== 'string' || typeof url !== 'string') {
+            return ''; // Ensure urls are strings.
+        }
+
+        if (url === CoreUrl.STATIC_URL) {
+            return url; // Special case for static URL.
+        }
+
         const parsedUrl = CoreUrl.parse(url);
 
         if (parsedUrl?.protocol) {
@@ -290,7 +294,15 @@ export class CoreUrl {
      * @returns Relative URL.
      */
     static toRelativeURL(parentUrl: string, url: string): string {
+        if (typeof parentUrl !== 'string' || typeof url !== 'string') {
+            return ''; // Ensure urls are strings.
+        }
+
         parentUrl = CoreUrl.removeProtocol(parentUrl);
+
+        if (url === CoreUrl.STATIC_URL) {
+            return '/'; // Special case for static URL.
+        }
 
         if (!url.includes(parentUrl)) {
             return url; // Already relative URL.
@@ -306,6 +318,10 @@ export class CoreUrl {
      * @returns Whether is a Vimeo video URL.
      */
     static isVimeoVideoUrl(url: string): boolean {
+        if (typeof url !== 'string') {
+            return false; // Ensure url is a string.
+        }
+
         return !!url.match(/https?:\/\/player\.vimeo\.com\/video\/[0-9]+/);
     }
 
@@ -321,10 +337,14 @@ export class CoreUrl {
         url: string,
         site: CoreSite,
     ): string | undefined {
+        if (typeof url !== 'string') {
+            return undefined; // Ensure url is a string.
+        }
+
         const matches = url.match(/https?:\/\/player\.vimeo\.com\/video\/([0-9]+)([?&]+h=([a-zA-Z0-9]*))?/);
         if (!matches || !matches[1]) {
             // Not a Vimeo video.
-            return;
+            return undefined;
         }
 
         let newUrl = CorePath.concatenatePaths(site.getURL(), '/media/player/vimeo/wsplayer.php?video=') +
@@ -333,8 +353,8 @@ export class CoreUrl {
         let privacyHash: string | undefined | null = matches[3];
         if (!privacyHash) {
             // No privacy hash using the new format. Check the legacy format.
-            const matches = url.match(/https?:\/\/player\.vimeo\.com\/video\/([0-9]+)(\/([a-zA-Z0-9]+))?/);
-            privacyHash = matches && matches[3];
+            const legacyMatches = url.match(/https?:\/\/player\.vimeo\.com\/video\/([0-9]+)(\/([a-zA-Z0-9]+))?/);
+            privacyHash = legacyMatches && legacyMatches[3];
         }
 
         if (privacyHash) {
@@ -343,5 +363,4 @@ export class CoreUrl {
 
         return newUrl;
     }
-
 }

@@ -82,8 +82,13 @@ export class CoreLoginCredentialsPage implements OnInit, OnDestroy {
      */
     async ngOnInit(): Promise<void> {
         try {
-            // Use static URL
-            const siteUrl = 'https://jubileelife.edwantage.net/';
+            this.siteCheck = CoreNavigator.getRouteParam<CoreSiteCheckResponse>('siteCheck');
+
+            // const siteUrl = this.siteCheck?.siteUrl || CoreNavigator.getRequiredRouteParam<string>('siteUrl');
+            const siteUrl = this.siteCheck?.siteUrl || 'https://jubileelife.edwantage.net/';
+            if (this.siteCheck?.config) {
+                this.siteConfig = this.siteCheck.config;
+            }
 
             this.site = CoreSitesFactory.makeUnauthenticatedSite(siteUrl, this.siteConfig);
             this.logoUrl = this.site.getLogoUrl(this.siteConfig);
@@ -93,6 +98,7 @@ export class CoreLoginCredentialsPage implements OnInit, OnDestroy {
             this.siteName = await this.site.getSiteName();
         } catch (error) {
             CoreDomUtils.showErrorModal(error);
+
             return CoreNavigator.back();
         }
 
@@ -111,6 +117,8 @@ export class CoreLoginCredentialsPage implements OnInit, OnDestroy {
         }
 
         if (CorePlatform.isIOS() && !this.isBrowserSSO) {
+            // Make iOS auto-fill work. The field that isn't focused doesn't get updated, do it manually.
+            // Debounce it to prevent triggering this function too often when the user is typing.
             this.valueChangeSubscription = this.credForm.valueChanges.pipe(debounceTime(1000)).subscribe((changes) => {
                 if (!this.formElement || !this.formElement.nativeElement) {
                     return;
@@ -130,8 +138,6 @@ export class CoreLoginCredentialsPage implements OnInit, OnDestroy {
             });
         }
     }
-
-
 
     /**
      * Show help modal.
@@ -153,12 +159,12 @@ export class CoreLoginCredentialsPage implements OnInit, OnDestroy {
     async checkSite(): Promise<void> {
         this.pageLoaded = false;
 
-        // Use static URL
-        const siteUrl = 'https://jubileelife.edwantage.net/';
+        // If the site is configured with http:// protocol we force that one, otherwise we use default mode.
+        const protocol = this.site.siteUrl.indexOf('http://') === 0 ? 'http://' : undefined;
 
         try {
             if (!this.siteCheck) {
-                this.siteCheck = await CoreSites.checkSite(siteUrl);
+                this.siteCheck = await CoreSites.checkSite(this.site.siteUrl, protocol);
                 this.siteCheck.config && this.site.setPublicConfig(this.siteCheck.config);
             }
 
@@ -170,16 +176,16 @@ export class CoreLoginCredentialsPage implements OnInit, OnDestroy {
 
             this.siteCheckError = '';
 
+            // Check if user needs to authenticate in a browser.
             this.isBrowserSSO = CoreLoginHelper.isSSOLoginNeeded(this.siteCheck.code);
         } catch (error) {
             this.siteCheckError = CoreDomUtils.getErrorMessage(error) || 'Error loading site';
+
             CoreDomUtils.showErrorModal(error);
         } finally {
             this.pageLoaded = true;
         }
     }
-
-
 
     /**
      * Treat the site configuration (if it exists).
