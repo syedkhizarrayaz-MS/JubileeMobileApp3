@@ -29,6 +29,12 @@
 img.core-usermenu-site-logo {
     margin-bottom: 8px;
     max-height: var(--core-user-menu-site-logo-max-height);
+    // display: block;
+    // margin: 0 auto 8px auto; /* Center horizontally and add margin below */
+    // max-height: var(--core-user-menu-site-logo-max-height); /* Limit height */
+    // width: 100%; /* Expand width to fill the container */
+    // height: auto; /* Maintain aspect ratio */
+    // object-fit: contain; /* Ensure image fits without distortion */
 }
 
 img.image-not-found {

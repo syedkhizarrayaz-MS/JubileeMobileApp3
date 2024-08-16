@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget android-versionCode="44003" id="com.jubilee.edge" ios-CFBundleVersion="4.4.0.3" version="4.4.0" versionCode="44003" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget android-versionCode="44003" id="com.jubileelife.edge" ios-CFBundleVersion="4.4.0.3" version="4.4.0" versionCode="44003" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Jubilee Edge</name>
     <description>Jubilee Edge official app</description>
     <author email="jubilee@moodle.com" href="https://jubilee.com">Jubilee Mobile team</author>

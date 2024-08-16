@@ -136,7 +136,8 @@ export class CoreMainMenuUserMenuComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const siteConfig = await CoreUtils.ignoreErrors(currentSite.getPublicConfig());
+        const
+        siteConfig = await CoreUtils.ignoreErrors(currentSite.getPublicConfig());
         this.siteLogo = currentSite.getLogoUrl(siteConfig);
         this.siteLogoLoaded = true;
     }
